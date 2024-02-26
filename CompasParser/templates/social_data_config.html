@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Данные приложений | Компас.Новости{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex align-items-center mb-3">
+            <h2>Пользовательские данные</h2>
+            <span class="question-icon ml-2" data-toggle="popover" data-content="Эти данные можно получить при регистрации приложений ВКонтакте и Телеграм">?</span>
+        
+        <div class="ml-auto">
+    <a href="{% static 'Приложение ВК.pdf' %}" class="icon-link">
+        <i class="fab fa-vk icon" style="font-size: 30px;"></i>
+        <span class="icon-label">Инструкция по ВКонтакте</span>
+    </a>
+    <a href="{% static 'Приложение ТГ.pdf' %}" class="icon-link">
+        <i class="fab fa-telegram icon" style="font-size: 30px;"></i>
+        <span class="icon-label">Инструкция по Телеграм</span>
+    </a>
+</div>
+
+    </div>
+    {% if form.errors %}
+    <div class="alert alert-danger">
+        <h5>Ошибка:</h5>
+        <ul>
+            {% for error in form.errors %}
+            <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+    <form method="post" action="{% url 'social_data_config' %}">
+        {% csrf_token %}
+        
+        <table class="table">
+            <tr>
+                <th><label for="phone_number"><i class="fas fa-phone" style="font-size: 30px; margin-right: 10px;"></i>Номер телефона:</label></th>
+                <td><input type="text" id="phone_number" name="phone_number" class="form-control" placeholder="+X (XXX) XXX-XX-XX" maxlength="18" value="{{ social_data.phone_number|default_if_none:'' }}">
+                {{ form.phone_number.errors }}
+                </td>
+                
+            </tr>
+            <tr>
+                <th><label for="vk_app_token"><i class="fab fa-vk" style="font-size: 30px; margin-right: 10px;"></i>Сервисный ключ доступа:</label></th>
+                <td>
+                    <div class="input-container">
+                        <input type="password" id="vk_app_token" name="vk_app_token" class="form-control" value="{{ social_data.vk_app_token|default_if_none:'' }}">
+                        <i class="fa fa-eye show-hide" onclick="togglePassword('vk_app_token')"></i>
+                    </div>
+                    {{ form.vk_app_token.errors }}
+                </td>
+            </tr>
+            <tr>
+                <th><label for="vk_app_id"><i class="fab fa-vk" style="font-size: 30px; margin-right: 10px;"></i>ID приложения:</label></th>
+                <td>
+                    <div class="input-container">
+                        <input type="password" id="vk_app_id" name="vk_app_id" class="form-control" value="{{ social_data.vk_app_id|default_if_none:'' }}">
+                        <i class="fa fa-eye show-hide" onclick="togglePassword('vk_app_id')"></i>
+                    </div>
+                    {{ form.vk_app_id.errors }}
+                </td>
+            </tr>
+            <tr>
+                <th><label for="vk_app_secret"><i class="fab fa-vk" style="font-size: 30px; margin-right: 10px;"></i>Защищенный ключ:</label></th>
+                <td>
+                    <div class="input-container">
+                        <input type="password" id="vk_app_secret" name="vk_app_secret" class="form-control" value="{{ social_data.vk_app_secret|default_if_none:'' }}">
+                        <i class="fa fa-eye show-hide" onclick="togglePassword('vk_app_secret')"></i>
+                    </div>
+                    {{ form.vk_app_secret.errors }}
+                </td>
+            </tr>
+            
+            <tr>
+                <th><label for="telegram_api_id"><i class="fab fa-telegram" style="font-size: 30px; margin-right: 10px;"></i>Telegram API ID:</label></th>
+                <td>
+                    <div class="input-container">
+                        <input type="password" id="telegram_api_id" name="telegram_api_id" class="form-control" value="{{ social_data.telegram_api_id|default_if_none:'' }}">
+                        <i class="fa fa-eye show-hide" onclick="togglePassword('telegram_api_id')"></i>
+                    </div>
+                    {{ form.telegram_api_id.errors }}
+                </td>
+            </tr>
+            <tr>
+                <th><label for="telegram_api_hash"><i class="fab fa-telegram" style="font-size: 30px; margin-right: 10px;"></i>Telegram API Hash:</label></th>
+                <td>
+                    <div class="input-container">
+                        <input type="password" id="telegram_api_hash" name="telegram_api_hash" class="form-control" value="{{ social_data.telegram_api_hash|default_if_none:'' }}">
+                        <i class="fa fa-eye show-hide" onclick="togglePassword('telegram_api_hash')"></i>
+                    </div>
+                    {{ form.telegram_api_hash.errors }}
+                </td>
+            </tr>
+        </table>
+        <button type="submit" class="btn btn-primary">Сохранить</button>
+    </form>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+function togglePassword(fieldId) {
+    var field = document.getElementById(fieldId);
+    var showHideIcon = field.nextElementSibling;
+
+    if (field.type === "password") {
+        field.type = "text";
+        showHideIcon.classList.remove("fa-eye");
+        showHideIcon.classList.add("fa-eye-slash");
+    } else {
+        field.type = "password";
+        showHideIcon.classList.remove("fa-eye-slash");
+        showHideIcon.classList.add("fa-eye");
+    }
+}
+</script>
+
+<script>
+    document.getElementById("phone_number").addEventListener("input", function (e) {
+        let value = e.target.value.replace(/\D/g, "");
+        let formattedValue = "";
+
+        if (value.length > 0) {
+            // Замена 8 на 7, если первая цифра 8
+            if (value[0] === '8') {
+                value = '7' + value.substr(1);
+            }
+            formattedValue = `+${value[0]}`;
+        }
+
+        if (value.length > 1) {
+            formattedValue += ` (${value.substr(1, 3)}`;
+        }
+
+        if (value.length > 4) {
+            formattedValue += `) ${value.substr(4, 3)}`;
+        }
+
+        if (value.length > 7) {
+            formattedValue += `-${value.substr(7, 2)}`;
+        }
+
+        if (value.length > 9) {
+            formattedValue += `-${value.substr(9)}`;
+        }
+
+        e.target.value = formattedValue;
+    });
+</script>
+{% endblock %}

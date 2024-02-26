@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Управление источниками | Компас.Новости{% endblock %}
+
+{% block content %}
+    <div class="container mt-4">
+        <div class="d-flex align-items-center mb-3">
+            <h2>Новостные источники</h2>
+            <span class="question-icon ml-2" data-toggle="popover" data-content="Вы можете включить или отключить источники посредством галочки или же вовсе удалить. После добавления источника нужно обязательно сделать его активным с помощью галочки и сохранить выбор.">?</span>
+        </div>
+        <form method="post" action="{% url 'manage_news_sources' %}">
+            {% csrf_token %}
+            <table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Название</th>
+            <th>Ссылка</th>
+            <th>RSS URL</th>
+            <th>Активация</th>
+            <th>Удалить</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for source in sources %}
+        <tr>
+            <td>{{ source.name }}</td>
+            <td><a href="{{ source.url }}">{{ source.url }}</a></td>
+            <td><a href="{{ source.rss_url }}">{{ source.rss_url }}</a></td>
+            <td>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="selected_sources" value="{{ source.id }}"
+                           {% if source.selected %}checked{% endif %}>
+                </div>
+            </td>
+            <td>
+                <a href="{% url 'delete_news_source' source.id %}" class="btn btn-danger btn-sm">Delete</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+            <button type="submit" class="btn btn-primary mt-3">Сохранить выбор</button>
+            <button type="button" id="select-all-btn" class="btn btn-primary mt-3">Выбрать все</button>
+
+            <div class="text-center mt-3">
+                <ul class="pagination justify-content-center">
+                    {% if sources.has_previous %}
+                        <li class="page-item"><a class="page-link" href="?page=1">Первая</a></li>
+                        <li class="page-item"><a class="page-link" href="?page={{ sources.previous_page_number }}">Назад</a></li>
+                    {% endif %}
+                    <li class="page-item disabled"><span class="page-link">Page {{ sources.number }} of {{ sources.paginator.num_pages }}</span></li>
+                    {% if sources.has_next %}
+                        <li class="page-item"><a class="page-link" href="?page={{ sources.next_page_number }}">Далее</a></li>
+                        <li class="page-item"><a class="page-link" href="?page={{ sources.paginator.num_pages }}">Последняя</a></li>
+                    {% endif %}
+                </ul>
+            </div>           
+        </form>        
+        <br>
+    </div>
+
+<script>
+// select_all.js
+document.addEventListener('DOMContentLoaded', function() {
+    const selectAllBtn = document.getElementById('select-all-btn');
+    const checkboxes = document.querySelectorAll('input[name="selected_sources"]');
+    
+    selectAllBtn.addEventListener('click', function() {
+        // Проверяем, выделены ли хотя бы какие-то из источников
+        let anyChecked = false;
+        checkboxes.forEach(function(checkbox) {
+            if (checkbox.checked) {
+                anyChecked = true;
+                return;
+            }
+        });
+        
+        // Если хотя бы один источник выделен, снимаем выделение со всех
+        // Иначе выделяем все источники
+        checkboxes.forEach(function(checkbox) {
+            checkbox.checked = !anyChecked;
+        });
+    });
+});
+
+</script>
+{% endblock %}

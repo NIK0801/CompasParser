@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block title %}Управление ключевыми словами | Компас.Новости{% endblock %}
+
+{% block content %}
+    <div class="container mt-4">
+        <div class="d-flex align-items-center mb-3">
+            <h2>Управление ключевыми словами(тегами)</h2>
+            <span class="question-icon ml-2" data-toggle="popover" data-content='Здесь вы можете управлять ключевыми словами по которым будет идти подбор новостей. Подбор новостей идет при условии, что в тексте новости будет присутствовать хотя бы 1 слово из Мешка 1 и хотя бы 1 слово из Мешка 2. Слова или словосочетания записываются строго через запятую. Пример: Мешок 1 - "Отделение-НБ,кассовые операции,брокер", Мешок 2 - "Йошкар-Ола,Марий Эл", Для более лучшего подбора лучше записывать слова в разных склонениях или без окончаний.'>?</span>
+        </div>
+        <br>
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+                <h3><i class="fa fa-tag" style="font-size: 30px; margin-right: 10px;"></i>Набор тегов 1</h3>
+                <textarea class="form-control" name="bag1" rows="4">{{ keyword_bag.bag1 }}</textarea>
+            </div>
+            <div class="mb-3">
+                <h3><i class="fa fa-tag" style="font-size: 30px; margin-right: 10px;"></i>Набор тегов 2</h3>
+                <textarea class="form-control" name="bag2" rows="4">{{ keyword_bag.bag2 }}</textarea>
+            </div>
+            <div class="mb-3 d-flex align-items-center">
+                <h3><i class="fas fa-archive icon" style="font-size: 30px; margin-right: 10px;"></i>Архив</h3>
+                <span class="question-icon ml-2" data-toggle="popover" data-content='Сюда можно скопировать неиспользуемые теги из первых 2х наборов, если они пока не нужны. Теги из архива никак не участвуют в фильтрации текста новостей, это просто хранилище.'>?</span>
+            </div>
+            <textarea class="form-control" name="bag_arch" rows="4">{{ keyword_bag.bag_arch }}</textarea>
+
+            <button type="submit" class="btn btn-primary mt-3">Сохранить</button>
+        </form>
+    </div>
+{% endblock %}
+

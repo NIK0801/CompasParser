@@ -1,0 +1,242 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+<!--     <link rel="icon" href="compass.svg" type="image/png"> -->
+
+    <link rel="icon" href="http://www.w3.org/2000/svg" type="image/svg+xml">
+    
+    <title>{% block title %}Daily News{% endblock %}</title>
+</head>
+<body class="d-flex flex-column min-vh-100">
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <a class="navbar-brand" href="{% url 'parsed_news' %}">C<i class="bi bi-compass"></i>mpas News</a>
+            <div class="container">
+                <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
+                    <ul class="navbar-nav">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'news_sources' %}">
+                                <i class="bi bi-newspaper"></i> Новостные источники
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'manage_keyword_bags' %}">
+                                <i class="bi bi-card-list"></i> Управление ключевыми словами
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'parsed_news' %}">
+                                <i class="bi bi-file-earmark-text"></i> Новости
+                            </a>
+                        </li>
+                    </ul>
+                </div>              
+            </div>
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="btn btn-primary" href="{% url 'logout' %}">
+                        <i class="bi bi-box-arrow-right"></i> Выйти
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </header>
+    <main role="main" class="flex-shrink-0">
+        <div class="container">
+            <div class="row compass-background">
+                <div class="col-12">
+                    {% block content %}
+                    {% endblock %}
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="mt-auto">
+        <div class="container">
+            <div class="row">
+                <div class="col-12 text-center">
+                    &copy; <span id="currentYear"></span> C<i class="bi bi-compass"></i>mpas News. All rights reserved.
+                </div>
+            </div>
+        </div>
+    </footer>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        // JavaScript to set current year dynamically
+        const currentYear = new Date().getFullYear();
+        document.getElementById('currentYear').textContent = currentYear;
+        
+        // Скрытие контента в новостях
+        $(document).ready(function () {
+            $('.content-toggle').click(function (e) {
+                e.preventDefault();
+                $(this).next('.content-hidden').toggle();
+            });
+        });
+        
+        // Enable Bootstrap Popover for tooltips
+        $(function () {
+            $('[data-toggle="popover"]').popover({
+                trigger: 'hover', // Show on hover
+                placement: 'right', // Display to the right of the cursor
+                html: true, // Allow HTML content
+                container: 'body', // Ensure it's positioned correctly
+                boundary: 'viewport', // Keep inside viewport
+                template: '<div class="popover" role="tooltip"><div class="arrow"></div><div class="popover-body"></div></div>' // Custom template for styling
+            });
+            // $('[data-toggle="popover"]').hover(function () {
+            //     // Show popover when hovering over the element
+            //     $(this).popover('show');
+            // }, function () {
+            //     // Hide popover when cursor is removed from the element
+            //     $(this).popover('hide');
+            // });
+        });
+        
+        // Значок со знаком вопроса(подсказки на странице)
+        const questionIcons = document.querySelectorAll('.question-icon');
+
+        questionIcons.forEach(icon => {
+            icon.addEventListener('mouseover', () => {
+                const tooltipText = icon.getAttribute('data-tooltip');
+                const tooltip = document.createElement('div');
+                tooltip.classList.add('tooltip');
+                tooltip.textContent = tooltipText;
+                document.body.appendChild(tooltip);
+
+                const iconRect = icon.getBoundingClientRect();
+                const tooltipRect = tooltip.getBoundingClientRect();
+
+                const tooltipTop = iconRect.top - tooltipRect.height - 10;
+                const tooltipLeft = iconRect.left + iconRect.width / 2 - tooltipRect.width / 2;
+
+                tooltip.style.top = `${tooltipTop}px`;
+                tooltip.style.left = `${tooltipLeft}px`;
+            });
+
+            icon.addEventListener('mouseout', () => {
+                const tooltip = document.querySelector('.tooltip');
+                if (tooltip) {
+                    document.body.removeChild(tooltip);
+                }
+            });
+        });
+    </script>
+ 
+    <style>
+        /* Добавьте стили для части страницы с фоновым рисунком компаса */
+        .compass-background {
+            background-image: url('путь_к_вашему_файлу_с_рисунком_компаса.jpg');
+            background-repeat: no-repeat;
+            background-size: cover;
+            background-position: center center;
+            padding: 30px; /* Регулируйте отступы, чтобы изображение не перекрывало контент */
+        }
+        .content-hidden {
+            display: none;
+            margin-top: 10px;
+        }
+
+        .custom-table {
+            width: calc(100% - 20px);
+            table-layout: auto;
+            margin-left: 10px;
+        }
+
+        .content-hidden img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .question-icon {
+            width: 40px;
+            height: 40px;
+            background-color: #f0f0f0;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 40px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 24px;
+        }
+
+        .tooltip {
+            position: absolute;
+            background-color: #333;
+            color: #fff;
+            padding: 5px;
+            border-radius: 4px;
+            font-size: 14px;
+            opacity: 1;
+            transition: opacity 0.2s;
+        }
+        /* Добавьте стили для части страницы с фоновым рисунком компаса */
+        .compass-background {
+            background-image: url('путь_к_вашему_файлу_с_рисунком_компаса.jpg');
+            background-repeat: no-repeat;
+            background-size: cover;
+            background-position: center center;
+            padding: 30px; /* Регулируйте отступы, чтобы изображение не перекрывало контент */
+        }
+#mobileMenu {
+                position: fixed;
+                top: 0;
+                left: -100%;
+                width: 80%;
+                height: 100%;
+                background-color: #fff;
+                z-index: 1000;
+                overflow-y: auto;
+                transition: left 0.3s ease;
+            }
+
+            .navbar-toggler[aria-expanded="true"] ~ #mobileMenu {
+                left: 0;
+            }
+        }
+        /* Стили для адаптации под мобильные устройства */
+        @media (max-width: 576px) {
+            .navbar-brand {
+                font-size: 18px;
+            }
+            .navbar-toggler {
+                padding: 0.25rem 0.3rem;
+            }
+            .navbar-toggler-icon {
+                width: 1.5em;
+                height: 1.5em;
+            }
+            .navbar-nav {
+                flex-direction: column;
+                align-items: flex-start;
+                width: 100%;
+            }
+            .nav-item {
+                width: 100%;
+                text-align: left;
+            }
+            .btn-primary {
+                margin-top: 10px;
+                width: 100%;
+            }
+            .tooltip {
+                font-size: 12px;
+            }
+            .compass-background {
+                padding: 10px; /* Adjust padding for smaller screens */
+            }
+        }
+        
+        
+        
+    </style>
+    
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+

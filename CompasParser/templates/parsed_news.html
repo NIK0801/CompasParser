@@ -1,0 +1,510 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% load i18n %}
+{% block title %}Список новостей | Компас.Новости{% endblock %}
+
+{% block content %}
+<style>
+    
+    .parsing-form-area {
+        border: 1px solid #ced4da;
+        border-radius: .25rem;
+        padding: .375rem .75rem;
+        margin-bottom: 1rem;
+    }
+
+    .parsing-input {
+        border: none;
+        padding: .375rem .75rem;
+    }
+
+    .parsing-label {
+        margin-right: 1rem;
+    }
+
+    .parsing-separator {
+        border-top: 1px solid #ced4da;
+        margin-top: 1rem;
+    }
+
+    .parsing-date {
+        border: 1px solid #ced4da;
+        border-radius: .25rem;
+        padding: .375rem .75rem;
+        margin-right: 1rem;
+    }
+    
+    
+    /* стили для результатов поиска */
+    .search-result {
+        text-align: center;
+        font-style: italic;
+        font-weight: bold; /* Добавляем жирный шрифт для большей выразительности */
+        margin-top: 1rem; /* Добавляем небольшой верхний отступ */
+    }
+    /* стили для формы поиска */
+    .search-area {
+        border: 1px solid #ced4da;
+        border-radius: .25rem;
+        padding: .375rem .75rem;
+        margin-bottom: 1rem;
+    }
+    .search-input {
+        border: none;
+        padding: .375rem .75rem;
+    }
+    .search-label {
+        margin-right: 1rem;
+    }
+    .search-separator {
+        border-top: 1px solid #ced4da;
+        margin-top: 1rem;
+    }
+    
+    /* крутящийся компас */
+    .loading-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 9999;
+    }
+    .loading-compass {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+    .loading-compass i {
+        color: #54ff9f; /* Цвет компаса */
+    }
+    /* стили для подвижной шапки таблицы */
+    .sticky-header {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        background-color: #fff; /* Цвет фона для шапки */
+    }
+    /* Для установки минимальной высоты таблицы */
+    .table-container {
+        min-height: 100vh;
+    }
+    /* стили подсказок */
+    .popup-container {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: #ffffff;
+        border-radius: 10px;
+        box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);
+        padding: 20px;
+        z-index: 1000;
+        max-width: 80%; /* Максимальная ширина окна */
+        max-height: 80%; /* Максимальная высота окна */
+        overflow: auto; /* Добавляем прокрутку, если контент не помещается */
+        margin: 20px;
+    }
+    .popup-close {
+        position: absolute;
+        top: 1px;
+        right: 10px;
+        cursor: pointer;
+        font-size: 30px;
+        color: red;
+    }
+    .popup-content img {
+        max-width: 100%; /* Ограничиваем максимальную ширину изображений до 100% ширины родительского элемента */
+        height: auto; /* Автоматически подстраиваем высоту изображений, сохраняя пропорции */
+    }
+    /* Стили для модального окна, которое можно использовать для оповещения пользователей об обновлениях*/
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.5);
+    }
+    .modal-content {
+      background-color: #fefefe;
+      margin: 15% auto;
+      padding: 20px;
+      border: 1px solid #888;
+      width: 80%;
+    }
+    .close {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+    }
+    .close:hover,
+    .close:focus {
+      color: black;
+      text-decoration: none;
+      cursor: pointer;
+    }
+</style>
+<!-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/css/bootstrap.min.css" rel="stylesheet"> -->
+<!-- <h1 style="color: red; text-align: center">ПРИЛОЖЕНИЕ В ДОРАБОТКЕ. 
+    ВОЗМОЖНЫ СБОИ В ФУНКЦИОНИРОВАНИИ</h1> -->
+
+<div class="container mt-4"> 
+    <!-- Модальное окно -->
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <p><b>!!!Информация об обновлении приложения!!!!</b></p>
+            <p>Доброго дня, дорогие пользователи! :)
+            <p>Количество реакций (лайки, комментарии и пр.) теперь спрятаны в окошко контента.
+            <p>Посмотреть их можно, нажав на кнопку "Посмотреть контент", они располагаются внизу, под текстом. Там же расположена кнопка "Поделиться в Телеграм".
+            <p>Помимо этого, в самом низу страницы, появились контакты для обратной связи(значок телеграма), в случае возникновения вопросов или предложений по данному проекту.
+                
+            <p style="color: red">!!!ЕЩЕ ИНФОРМАЦИЯ!!!
+            <p> Поиск стал чуточку гибче.Если вы осуществляете поиск по нескольким словам, программа будет искать только те, в которых присутствуют все введенные слова, но теперь неважно в каком они будут порядке записаны. Также все введенные в поиск слова дополнительно приводятся в начальную форму, то есть поиск происходит и по введенной форме слова и по его начальной форме, что увеличивает гибкость поиска.(к примеру, если мы ищем новость, которая содержит строку "музеЙ Банка России" и введем в поиск строку "банк россии музеИ", то новость все равно найдется.)
+            <p> Также исправлена ошибка, при которой могли не парсится некоторые записи из пабликов ВК(из-за 1 закрепленной записи, которая находится в самом верху и может быть старше следующих за ней - в таком случае парсинг прерывался, если дата этой записи не входила в период поиска)
+        </div>
+    </div>
+    <div class="d-flex align-items-center mb-3">
+        <h2>Новости</h2>
+        <span class="question-icon ml-2" data-toggle="popover" data-content='Чтобы собрать новости, сначала выберите период, за который нужно осуществить сбор и нажмите на кнопку "Собрать новости"'>?</span>
+    </div>
+    <label class="input-group-text">Выберите период, за который нужно осуществить сбор:</label>
+    <!-- Form for specifying a time interval -->
+    <form id="parsing-form" method="post" class="mb-2">
+    {% csrf_token %}
+    <div class="parsing-form-area input-group">
+        <label for="start_date" class="input-group-text parsing-label">Начало периода:</label>
+        <input type="date" id="start_date" name="start_date" class="form-control parsing-date" value="{{ start_date }}">
+        <label for="end_date" class="input-group-text parsing-label">Конец периода:</label>
+        <input type="date" id="end_date" name="end_date" class="form-control parsing-date" value="{{ end_date }}">
+        <button type="submit" class="btn btn-primary"><i class="fas fa-shopping-basket"></i> Собрать новости</button>
+    </div>
+</form>
+    <p class="search-result">Общее количество новостей в базе: {{ total_news_count }}</p>
+    <div class="search-separator"></div>
+    <br>
+    <!-- Крутящийся компас при парсинге -->
+<!--     <div id="loading-overlay" class="loading-overlay">
+        <div class="loading-compass">
+            <i class="fa fa-compass fa-spin" style="font-size: 100px;"></i>
+        </div>
+    </div> -->
+    <!-- Крутящийся компас при парсинге -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loading-compass">
+            <i class="fa fa-compass fa-spin" style="font-size: 100px;"></i>
+        </div>
+    </div>
+    <!-- Form for selecting the period -->
+    <label class="input-group-text">Форма поиска:</label>
+    <form method="get" class="mb-2" id="filter-search-form">
+        <div class="search-area input-group">
+            <label for="filter_start_date" class="input-group-text search-label">Начало периода:</label>
+            <input type="date" id="filter_start_date" name="filter_start_date" class="form-control" value="{{ filter_start_date }}">
+            <label for="filter_end_date" class="input-group-text search-label ml-2">Конец периода:</label>
+            <input type="date" id="filter_end_date" name="filter_end_date" class="form-control" value="{{ filter_end_date }}">
+            <span class="question-icon ml-2" data-toggle="popover" data-content='Период отображения новостей и строка поиска'>?</span>
+            <div class="input-group-append">
+                <input type="text" id="search" name="q" class="form-control search-input" placeholder="Поиск..." {% if search_query %}value="{{ search_query }}"{% endif %}>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i> Найти</button>
+            </div>
+        </div>
+        
+        <p class="search-result">Результат поиска: {{ filtered_news_count }}</p>
+        <div class="search-separator"></div>
+    </form>
+    {% if messages %}
+    <div class="alert alert-success">
+        <ul class="m-0">
+            {% for message in messages %}
+            <li>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}     
+    <div id="notification-container" class="position-fixed top-0 end-0 p-3">
+    </div>
+    <!-- Form for exporting selected news -->
+    <div class="d-flex align-items-center mb-3">
+        {% if request.user.pressmonitoringoperatorrole %}
+        <form id="export-form" method="post" action="{% url 'export_to_excel' %}">
+            {% csrf_token %}
+            <input type="hidden" name="selected_news" value="" id="selected-news-field">
+            <button type="submit" class="btn btn-success">
+                <i class="fas fa-file-excel"></i> Экспорт в Excel
+            </button>
+        </form>
+        {% endif %}
+        {% if request.user.econommonitoringoperatorrole %}
+        <form id="word-export-form" method="post" action="{% url 'export_to_word' %}">
+            {% csrf_token %}
+            <input type="hidden" name="selected_news_word" value="" id="selected-news-field-word">
+            <button type="submit" class="btn btn-primary ml-2">
+                <i class="fas fa-file-word"></i> Экспорт в Word
+            </button>
+        </form>
+        {% endif %}
+        <form id="delete-selected-form" method="post" action="{% url 'delete_selected_news' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger ml-2">
+                <i class="fas fa-trash"></i> Удалить все новости
+            </button>
+        </form>
+        <span class="question-icon ml-2" data-toggle="popover" data-content='Экспорт выбранных новостей в определенный формат/удаление всех новостей из базы'>?</span>
+        
+    </div>  
+    <div class="text-center mt-3">
+        <ul class="pagination justify-content-center">
+            {% if news.has_previous %}
+                <li class="page-item"><a class="page-link" href="?page=1">первая</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ news.previous_page_number }}">предыдущая</a></li>
+            {% endif %}
+            <li class="page-item disabled">
+                <span class="page-link">
+                    Страница {{ news.number }} из {{ news.paginator.num_pages }}.
+                </span>
+            </li>
+            {% if news.has_next %}
+                <li class="page-item"><a class="page-link" href="?page={{ news.next_page_number }}">следующая</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ news.paginator.num_pages }}">последняя</a></li>
+            {% endif %}
+        </ul>
+    </div>
+    <div class="d-flex justify-content-center">
+        <!-- News table -->
+        <table id="news-table" class="table table-bordered table-striped custom-table" style="table-layout: auto;">
+            <thead>
+                <tr class="sticky-header">
+                    <th>
+                        <div class="d-flex align-items-center mb-3">
+                            <input type="checkbox" id="select-all-news" class="mr-2">
+                            <label for="select-all-news"></label>
+                            Выбрать
+                        </div>
+                    </th>
+                    <th>Парсер</th>
+                    <th>
+                        <span id="sort-date" class="clickable">Дата публикации <i id="sort-icon" class="bi bi-caret-down"></i></span>
+                    </th>
+                    <th>Заголовок</th>
+                    <th>Контент</th>
+                    <th>Ссылка</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for news_item in news %}
+                    <tr>
+                        <td>
+                            <input type="checkbox" name="selected_news" value="{{ news_item.id }}">
+                        </td>
+                        <td>{{ news_item.source.parser.name}}</td>
+                        <td>{{ news_item.date_published|date:"d.m.Y H:i:s" }}</td>
+                        
+                        <td>{{ news_item.title|striptags }}</td>
+                        <td>
+                            <a href="#" class="content-toggle">Посмотреть контент</a>
+                            <div class="popup-container">
+                                <div class="popup-content">
+                                    <p>{{ news_item.content|safe }}</p>
+                                </div>
+                                <div class="reactions">
+                                    {% if news_item.likes is not None %}
+                                        <i class="far fa-thumbs-up"></i> 
+                                        {{ news_item.likes }}
+                                    {% endif %}
+                                    {% if news_item.reposts is not None %}
+                                        <i class="fas fa-retweet"></i> 
+                                        {{ news_item.reposts }}
+                                    {% endif %}
+                                    {% if news_item.comments is not None %}
+                                        <i class="far fa-comment"></i>
+                                        {{ news_item.comments }}
+                                    {% endif %}
+                                    {% if news_item.views is not None %}
+                                        <i class="far fa-eye"></i> 
+                                        {{ news_item.views }}
+                                    {% endif %}
+                                    <a href="{% url 'share_telegram' news_item.id %}" class="btn btn-primary btn-sm">
+                                <i class="bi bi-telegram"></i>Поделиться
+                            </a>
+                                </div>
+                                <span class="popup-close">&times;</span>
+                            </div>
+                        </td>
+                        
+                        <td><a href="{{ news_item.link }}" target="_blank">{{ news_item.source.name }}</a></td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="text-center mt-3">
+        <ul class="pagination justify-content-center">
+            {% if news.has_previous %}
+                <li class="page-item"><a class="page-link" href="?page=1">первая</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ news.previous_page_number }}">предыдущая</a></li>
+            {% endif %}
+            <li class="page-item disabled">
+                <span class="page-link">
+                    Страница {{ news.number }} из {{ news.paginator.num_pages }}.
+                </span>
+            </li>
+            {% if news.has_next %}
+                <li class="page-item"><a class="page-link" href="?page={{ news.next_page_number }}">следующая</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ news.paginator.num_pages }}">последняя</a></li>
+            {% endif %}
+        </ul>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.min.js"></script> -->
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.js"></script>
+
+<script src="{% static 'compasnews/js/script.js' %}"></script>
+<script>
+// Крутящийся компас
+// $(document).ready(function() {
+//     $('#parsing-form').on('submit', function(e) {
+//         e.preventDefault();
+
+//         // Show the loading overlay when parsing starts
+//         $('#loading-overlay').show();
+
+//         $.ajax({
+//             type: 'POST',
+//             url: '{% url "parsed_news" %}',
+//             data: $(this).serialize(),
+//             success: function(response) {
+//                 // Parsing completed; handle the response
+
+//                 // Hide the loading overlay when parsing is completed
+//                 $('#loading-overlay').hide();
+
+//                 // Add a query parameter to the URL to indicate parsing completion
+//                 window.location.href = updateUrlParameter(window.location.href, 'parsingCompleted', 'true');
+//             }
+//         });
+//     });
+
+//     // Function to display a notification to the user
+//     function showNotification(message) {
+//         var notification = $('<div class="toast" role="alert" aria-live="assertive" aria-atomic="true">' +
+//             '<div class="toast-header">' +
+//             '<strong class="mr-auto">Уведомление</strong>' +
+//             '<button type="button" class="ml-2 mb-1 close" aria-label="Close">' +
+//             '<span aria-hidden="true">&times;</span>' +
+//             '</button>' +
+//             '</div>' +
+//             '<div class="toast-body">' + message + '</div>' +
+//             '</div>');
+
+//         // Add the notification to the container
+//         $('#notification-container').append(notification);
+
+//         // Show the notification
+//         notification.toast({ autohide: false }).toast('show');
+
+//         // Handle notification close
+//         notification.find('.close').on('click', function () {
+//             notification.toast('hide'); // Manually hide the notification
+//             setTimeout(function() {
+//                 notification.remove(); // Manually remove the notification after it's hidden
+//                 // Remove the 'parsingCompleted' query parameter from the URL
+//                 window.location.href = removeUrlParameter(window.location.href, 'parsingCompleted');
+//             }, 500); // Adjust the timing as needed
+//         });
+//     }
+
+//     // Function to add or update a query parameter in the URL
+//     function updateUrlParameter(url, param, value) {
+//         var re = new RegExp("([?&])" + param + "=.*?(&|$)", "i");
+//         var separator = url.indexOf('?') !== -1 ? "&" : "?";
+//         if (url.match(re)) {
+//             return url.replace(re, '$1' + param + "=" + value + '$2');
+//         } else {
+//             return url + separator + param + "=" + value;
+//         }
+//     }
+
+//     // Function to remove a query parameter from the URL
+//     function removeUrlParameter(url, param) {
+//         var urlParts = url.split('?');
+//         if (urlParts.length >= 2) {
+//             var prefix = encodeURIComponent(param) + '=';
+//             var query = urlParts[1];
+//             var params = query.split('&');
+//             for (var i = params.length - 1; i >= 0; i--) {
+//                 if (params[i].lastIndexOf(prefix, 0) !== -1) {
+//                     params.splice(i, 1);
+//                 }
+//             }
+//             return urlParts[0] + (params.length > 0 ? '?' + params.join('&') : '');
+//         }
+//         return url;
+//     }
+//     // Check for the 'parsingCompleted' query parameter in the URL
+//     var urlParams = new URLSearchParams(window.location.search);
+//     if (urlParams.has('parsingCompleted')) {
+//         // Parsing has been completed, display the success notification
+//         showNotification('Парсинг завершен успешно.');
+//     }
+// });
+    
+$(document).ready(function() {
+    $('#parsing-form').on('submit', function(e) {
+        e.preventDefault();
+
+        // Show the loading overlay when parsing starts
+        $('#loading-overlay').show();
+
+        $.ajax({
+            type: 'POST',
+            url: '{% url "parsed_news" %}',
+            data: $(this).serialize(),
+            xhr: function() {
+                var xhr = new window.XMLHttpRequest();
+                // Listen for progress events to update the progress bar
+                xhr.upload.addEventListener('progress', function(evt) {
+                    if (evt.lengthComputable) {
+                        var percentComplete = (evt.loaded / evt.total) * 100;
+                        $('#progress-bar').show();
+                        $('#progress-bar-inner').css('width', percentComplete + '%').attr('aria-valuenow', percentComplete);
+                    }
+                }, false);
+                return xhr;
+            },
+            success: function(response) {
+                // Parsing completed; handle the response
+
+                // Hide the loading overlay when parsing is completed
+                $('#loading-overlay').hide();
+
+                // Add a query parameter to the URL to indicate parsing completion
+                window.location.href = updateUrlParameter(window.location.href, 'parsingCompleted', 'true');
+            },
+            error: function(xhr, textStatus, errorThrown) {
+                // Parsing failed; handle the error
+
+                // Hide the loading overlay when parsing fails
+                $('#loading-overlay').hide();
+
+                // Display an error message to the user
+                showNotification('Парсинг завершен с ошибкой: ' + errorThrown);
+            }
+        });
+    });
+});
+
+</script>
+{% endblock %}

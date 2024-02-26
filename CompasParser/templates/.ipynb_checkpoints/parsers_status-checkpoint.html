@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block title %}Управление парсерами | Компас.Новости{% endblock %}
+{% block content %}
+<div class="container">
+    <div class="d-flex align-items-center mb-3">
+        <h2 class="text-center">Управление Парсерами</h2>
+        <span class="question-icon ml-2" data-toggle="popover" data-content="Здесь вы можете включить или отключить тот или иной парсер с помощью галочки и кнопки 'сохранить'">?</span>
+    </div>
+    <br>
+    <form method="post" action="{% url 'parsers_status' %}">
+        {% csrf_token %}
+        <table class="table table-bordered table-striped">
+            <thead>
+                <tr>
+                    <th>Парсер</th>
+                    <th>Информация</th>
+                    <th>Статус</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for parser in parsers %}
+                <tr>
+                    <td>{{ parser.name }}</td>
+                    <td></td>
+                    <td>
+                        <input type="checkbox" name="parser_{{ parser.id }}" {% if parser.status %}checked{% endif %}>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        <div class="text-center">
+            <button type="submit" class="btn btn-primary">Сохранить</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

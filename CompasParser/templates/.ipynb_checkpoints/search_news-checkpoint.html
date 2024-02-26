@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Результаты поиска | Компас.Новости{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Результаты поиска</h2>
+
+    <p>Найдено новостей: {{ news_results|length }}</p>
+
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>Заголовок</th>
+                <th>Содержание</th>
+                <th>Дата публикации</th>
+                <th>Источник</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for news_item in news_results %}
+            <tr>
+                <td>{{ news_item.title }}</td>
+                <td>{{ news_item.content|safe }}</td>
+                <td>{{ news_item.date_published|date:"d.m.Y H:i:s" }}</td>
+                <td>{{ news_item.source.name }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4">Нет результатов для отображения.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
